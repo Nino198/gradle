@@ -58,7 +58,7 @@ public class InitDeprecationLoggingActionExecutor implements BuildTreeActionExec
                 LoggingDeprecatedFeatureHandler.setTraceLoggingEnabled(false);
         }
 
-        DeprecationLogger.init(problemDiagnosticsFactory, startParameter.getWarningMode(), eventEmitter, problemsService);
+        DeprecationLogger.init(problemDiagnosticsFactory, startParameter.getWarningMode(), eventEmitter);
         return delegate.execute(action, buildTreeContext);
     }
 }
