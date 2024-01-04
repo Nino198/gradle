@@ -131,6 +131,7 @@ import org.gradle.util.internal.WrapUtil;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -141,6 +142,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -501,16 +503,14 @@ public abstract class DefaultConfiguration extends AbstractFileCollection implem
 
     @Override
     public void runDependencyActions() {
-        defaultDependencyActions.execute(dependencies);
-        withDependencyActions.execute(dependencies);
+        runActionInHierarchy(conf -> {
+            conf.defaultDependencyActions.execute(conf.dependencies);
+            conf.withDependencyActions.execute(conf.dependencies);
 
-        // Discard actions after execution
-        defaultDependencyActions = ImmutableActionSet.empty();
-        withDependencyActions = ImmutableActionSet.empty();
-
-        for (Configuration superConfig : extendsFrom) {
-            ((ConfigurationInternal) superConfig).runDependencyActions();
-        }
+            // Discard actions after execution
+            conf.defaultDependencyActions = ImmutableActionSet.empty();
+            conf.withDependencyActions = ImmutableActionSet.empty();
+        });
     }
 
     @Deprecated
@@ -693,10 +693,8 @@ public abstract class DefaultConfiguration extends AbstractFileCollection implem
             @Override
             public ResolverResults call(BuildOperationContext context) {
                 runDependencyActions();
-                preventFromFurtherMutation();
+                runBeforeResolve();
 
-                ResolvableDependenciesInternal incoming = (ResolvableDependenciesInternal) getIncoming();
-                performPreResolveActions(incoming);
                 ResolverResults results = resolver.resolveGraph(DefaultConfiguration.this);
                 dependenciesModified = false;
 
@@ -811,7 +809,7 @@ public abstract class DefaultConfiguration extends AbstractFileCollection implem
         return null;
     }
 
-    private void performPreResolveActions(ResolvableDependencies incoming) {
+    private void runBeforeResolve() {
         DependencyResolutionListener dependencyResolutionListener = dependencyResolutionListeners.getSource();
         insideBeforeResolve = true;
         try {
@@ -855,11 +853,15 @@ public abstract class DefaultConfiguration extends AbstractFileCollection implem
             // factory resolves this configuration
             getResolutionStrategy().setKeepStateRequiredForGraphResolution(true);
 
-            return factory.create();
-        } finally {
+            T value = factory.create();
+
             // Reset this configuration to an unresolved state
-            getResolutionStrategy().setKeepStateRequiredForGraphResolution(false);
             currentResolveState.set(Optional.empty());
+            canBeMutated = true;
+
+            return value;
+        } finally {
+            getResolutionStrategy().setKeepStateRequiredForGraphResolution(false);
         }
     }
 
@@ -1106,12 +1108,35 @@ public abstract class DefaultConfiguration extends AbstractFileCollection implem
             return;
         }
 
-        // TODO This should use the same `MutationValidator` infrastructure that we use for other mutation types
+        runActionInHierarchy(conf -> {
+            conf.configurationAttributes.freeze();
+            conf.outgoing.preventFromFurtherMutation();
+            conf.preventUsageMutation();
+            conf.canBeMutated = false;
+        });
+    }
 
-        configurationAttributes.freeze();
-        outgoing.preventFromFurtherMutation();
-        preventUsageMutation();
-        canBeMutated = false;
+    /**
+     * Runs the provided action for this configuration and all configurations that it extends from.
+     *
+     * <p>Specifically handles the case where {@link Configuration#extendsFrom} is called during the
+     * action execution.</p>
+     */
+    private void runActionInHierarchy(Action<DefaultConfiguration> action) {
+        Set<Configuration> seen = new HashSet<>();
+        Queue<Configuration> remaining = new ArrayDeque<>();
+        remaining.add(this);
+
+        while (!remaining.isEmpty()) {
+            Configuration current = remaining.remove();
+            action.execute((DefaultConfiguration) current);
+
+            for (Configuration parent : current.getExtendsFrom()) {
+                if (seen.add(parent)) {
+                    remaining.add(parent);
+                }
+            }
+        }
     }
 
     @Override
@@ -1352,6 +1377,7 @@ public abstract class DefaultConfiguration extends AbstractFileCollection implem
         preventIllegalParentMutation(type);
         markAsModified(type);
         notifyChildren(type);
+        maybePreventMutation(type + " of parent");
     }
 
     @Override
@@ -1359,6 +1385,26 @@ public abstract class DefaultConfiguration extends AbstractFileCollection implem
         preventIllegalMutation(type);
         markAsModified(type);
         notifyChildren(type);
+        maybePreventMutation(type.toString());
+    }
+
+    /**
+     * Emit a warning (and eventually throw an exception) if a mutation of type {@code type} occurs
+     * during a forbidden state.
+     */
+    private void maybePreventMutation(String type) {
+        // TODO: Deprecate mutating configuration in beforeResolve
+
+        // We explicitly allow mutation in a beforeResolve hook, even if we've been locked for mutation,
+        // since beforeResolve does not run before task dependencies are resolved, and task dependency
+        // resolution locks the configuration.
+        if (!insideBeforeResolve && !canBeMutated) {
+            DeprecationLogger.deprecateAction(String.format("Mutating the %s of " + this + " after it has been locked for mutation", type))
+                .withAdvice("After a Configuration has been resolved, observed via dependency-management, or published, it should not be modified further.")
+                .willBecomeAnErrorInGradle9()
+                .withUpgradeGuideSection(8, "mutate_configuration_after_locking")
+                .nagUser();
+        }
     }
 
     private void preventIllegalParentMutation(MutationType type) {

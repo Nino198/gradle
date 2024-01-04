@@ -344,7 +344,9 @@ class UnsupportedConfigurationMutationTest extends AbstractIntegrationSpec {
             configurations.a.resolutionStrategy.cacheChangingModulesFor 0, "seconds"
             configurations.a.resolutionStrategy.componentSelection.all {}
         """
-        expect: succeeds()
+        expect:
+        7.times { executer.expectDocumentedDeprecationWarning("Mutating the resolution strategy of configuration ':a' after it has been locked for mutation has been deprecated. This will fail with an error in Gradle 9.0. After a Configuration has been resolved, observed via dependency-management, or published, it should not be modified further. Consult the upgrading guide for further information: https://docs.gradle.org/current/userguide/upgrading_version_8.html#mutate_configuration_after_locking")}
+        succeeds ':help'
     }
 
     def "fails when configuration is resolved"() {
@@ -358,8 +360,6 @@ class UnsupportedConfigurationMutationTest extends AbstractIntegrationSpec {
             configurations.a.resolve()
             configurations.a.exclude group: 'otherGroup'
         """
-
-
 
         when: fails()
         then: failure.assertHasCause("Cannot change dependencies of dependency configuration ':a' after it has been included in dependency resolution.")

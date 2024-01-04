@@ -22,6 +22,7 @@ import org.gradle.api.internal.artifacts.configurations.ResolutionStrategyIntern
 import org.gradle.api.internal.artifacts.ivyservice.moduleconverter.RootComponentMetadataBuilder;
 import org.gradle.api.internal.artifacts.transform.TransformUpstreamDependenciesResolverFactory;
 import org.gradle.api.internal.attributes.AttributeContainerInternal;
+import org.gradle.internal.FinalizableValue;
 import org.gradle.internal.component.model.DependencyMetadata;
 import org.gradle.util.Path;
 
@@ -30,7 +31,7 @@ import java.util.List;
 /**
  * Represents something that can be resolved.
  */
-public interface ResolveContext extends DependencyMetaDataProvider {
+public interface ResolveContext extends DependencyMetaDataProvider, FinalizableValue {
 
     String getName();
 

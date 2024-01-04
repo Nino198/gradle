@@ -81,6 +81,7 @@ task copyFiles(type:Copy) {
 
         when:
         succeeds 'copyFiles'
+
         then:
         file('libs').assertHasDescendants('dep1-1.0.jar', 'dep2-1.0.jar')
 
@@ -92,6 +93,7 @@ configurations.conf.incoming.beforeResolve { resolvableDependencies ->
 }
 """
         succeeds "copyFiles"
+
         then:
         file('libs').assertHasDescendants('dep1-1.0.jar', 'dep2-1.0.jar', 'dep3-1.0.jar')
     }
@@ -179,7 +181,7 @@ task copyFiles(type:Copy) {
                 testImplementation('org.test:module2:1.0')
             }
 
-            configurations.all { configuration -> 
+            configurations.all { configuration ->
                 if (configuration.canBeResolved) {
                     configuration.incoming.beforeResolve { resolvableDependencies ->
                         resolvableDependencies.dependencies.each { dependency ->
@@ -200,6 +202,8 @@ task copyFiles(type:Copy) {
 """
 
         expect:
+        executer.expectDocumentedDeprecationWarning("Mutating the dependency attributes of configuration ':implementation' after it has been locked for mutation has been deprecated. This will fail with an error in Gradle 9.0. After a Configuration has been resolved, observed via dependency-management, or published, it should not be modified further. Consult the upgrading guide for further information: https://docs.gradle.org/current/userguide/upgrading_version_8.html#mutate_configuration_after_locking")
+        executer.expectDocumentedDeprecationWarning("Mutating the dependency attributes of configuration ':testImplementation' after it has been locked for mutation has been deprecated. This will fail with an error in Gradle 9.0. After a Configuration has been resolved, observed via dependency-management, or published, it should not be modified further. Consult the upgrading guide for further information: https://docs.gradle.org/current/userguide/upgrading_version_8.html#mutate_configuration_after_locking")
         succeeds 'resolveDependencies'
     }
 
@@ -251,6 +255,8 @@ task resolveDependencies {
 """
 
         expect: "that resolving conf a, then b, then a again, succeeds"
+        executer.expectDocumentedDeprecationWarning("Mutating the dependency attributes of parent of configuration ':a' after it has been locked for mutation has been deprecated. This will fail with an error in Gradle 9.0. After a Configuration has been resolved, observed via dependency-management, or published, it should not be modified further. Consult the upgrading guide for further information: https://docs.gradle.org/current/userguide/upgrading_version_8.html#mutate_configuration_after_locking")
+        executer.expectDocumentedDeprecationWarning("Mutating the dependency attributes of configuration ':shared' after it has been locked for mutation has been deprecated. This will fail with an error in Gradle 9.0. After a Configuration has been resolved, observed via dependency-management, or published, it should not be modified further. Consult the upgrading guide for further information: https://docs.gradle.org/current/userguide/upgrading_version_8.html#mutate_configuration_after_locking")
         succeeds 'resolveDependencies'
     }
 
