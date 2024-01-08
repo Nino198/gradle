@@ -28,10 +28,9 @@ import org.gradle.api.internal.artifacts.ivyservice.moduleconverter.RootComponen
 import org.gradle.api.internal.attributes.ImmutableAttributesFactory;
 import org.gradle.api.internal.collections.DomainObjectCollectionFactory;
 import org.gradle.api.internal.file.FileCollectionFactory;
-import org.gradle.api.internal.project.ProjectStateRegistry;
 import org.gradle.api.internal.tasks.TaskDependencyFactory;
-import org.gradle.internal.code.UserCodeApplicationContext;
 import org.gradle.internal.Factory;
+import org.gradle.internal.code.UserCodeApplicationContext;
 import org.gradle.internal.event.ListenerBroadcast;
 import org.gradle.internal.model.CalculatedValueContainerFactory;
 import org.gradle.internal.operations.BuildOperationExecutor;
@@ -50,7 +49,6 @@ public class DefaultUnlockedConfiguration extends DefaultConfiguration {
         ConfigurationsProvider configurationsProvider,
         ConfigurationResolver resolver,
         ListenerBroadcast<DependencyResolutionListener> dependencyResolutionListeners,
-        ProjectDependencyObservedListener dependencyObservedBroadcast,
         DependencyMetaDataProvider metaDataProvider,
         ComponentIdentifierFactory componentIdentifierFactory,
         DependencyLockingProvider dependencyLockingProvider,
@@ -64,7 +62,6 @@ public class DefaultUnlockedConfiguration extends DefaultConfiguration {
         RootComponentMetadataBuilder rootComponentMetadataBuilder,
         ResolveExceptionContextualizer exceptionContextualizer,
         UserCodeApplicationContext userCodeApplicationContext,
-        ProjectStateRegistry projectStateRegistry,
         WorkerThreadRegistry workerThreadRegistry,
         DomainObjectCollectionFactory domainObjectCollectionFactory,
         CalculatedValueContainerFactory calculatedValueContainerFactory,
@@ -78,7 +75,6 @@ public class DefaultUnlockedConfiguration extends DefaultConfiguration {
             configurationsProvider,
             resolver,
             dependencyResolutionListeners,
-            dependencyObservedBroadcast,
             metaDataProvider,
             componentIdentifierFactory,
             dependencyLockingProvider,
@@ -92,7 +88,6 @@ public class DefaultUnlockedConfiguration extends DefaultConfiguration {
             rootComponentMetadataBuilder,
             exceptionContextualizer,
             userCodeApplicationContext,
-            projectStateRegistry,
             workerThreadRegistry,
             domainObjectCollectionFactory,
             calculatedValueContainerFactory,

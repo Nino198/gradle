@@ -30,10 +30,9 @@ import org.gradle.api.internal.artifacts.ivyservice.moduleconverter.RootComponen
 import org.gradle.api.internal.attributes.ImmutableAttributesFactory;
 import org.gradle.api.internal.collections.DomainObjectCollectionFactory;
 import org.gradle.api.internal.file.FileCollectionFactory;
-import org.gradle.api.internal.project.ProjectStateRegistry;
 import org.gradle.api.internal.tasks.TaskDependencyFactory;
-import org.gradle.internal.code.UserCodeApplicationContext;
 import org.gradle.internal.Factory;
+import org.gradle.internal.code.UserCodeApplicationContext;
 import org.gradle.internal.event.ListenerBroadcast;
 import org.gradle.internal.event.ListenerManager;
 import org.gradle.internal.model.CalculatedValueContainerFactory;
@@ -65,7 +64,6 @@ public class DefaultConfigurationFactory {
     private final ImmutableAttributesFactory attributesFactory;
     private final ResolveExceptionContextualizer exceptionContextualizer;
     private final UserCodeApplicationContext userCodeApplicationContext;
-    private final ProjectStateRegistry projectStateRegistry;
     private final WorkerThreadRegistry workerThreadRegistry;
     private final DomainObjectCollectionFactory domainObjectCollectionFactory;
     private final CalculatedValueContainerFactory calculatedValueContainerFactory;
@@ -86,7 +84,6 @@ public class DefaultConfigurationFactory {
         ImmutableAttributesFactory attributesFactory,
         ResolveExceptionContextualizer exceptionContextualizer,
         UserCodeApplicationContext userCodeApplicationContext,
-        ProjectStateRegistry projectStateRegistry,
         WorkerThreadRegistry workerThreadRegistry,
         DomainObjectCollectionFactory domainObjectCollectionFactory,
         CalculatedValueContainerFactory calculatedValueContainerFactory,
@@ -106,7 +103,6 @@ public class DefaultConfigurationFactory {
         this.attributesFactory = attributesFactory;
         this.exceptionContextualizer = exceptionContextualizer;
         this.userCodeApplicationContext = userCodeApplicationContext;
-        this.projectStateRegistry = projectStateRegistry;
         this.workerThreadRegistry = workerThreadRegistry;
         this.domainObjectCollectionFactory = domainObjectCollectionFactory;
         this.calculatedValueContainerFactory = calculatedValueContainerFactory;
@@ -132,7 +128,6 @@ public class DefaultConfigurationFactory {
                 configurationsProvider,
                 resolver,
                 dependencyResolutionListeners,
-                listenerManager.getBroadcaster(ProjectDependencyObservedListener.class),
                 metaDataProvider,
                 componentIdentifierFactory,
                 dependencyLockingProvider,
@@ -146,7 +141,6 @@ public class DefaultConfigurationFactory {
                 rootComponentMetadataBuilder,
                 exceptionContextualizer,
                 userCodeApplicationContext,
-                projectStateRegistry,
                 workerThreadRegistry,
                 domainObjectCollectionFactory,
                 calculatedValueContainerFactory,
@@ -176,7 +170,6 @@ public class DefaultConfigurationFactory {
             configurationsProvider,
             resolver,
             dependencyResolutionListeners,
-            listenerManager.getBroadcaster(ProjectDependencyObservedListener.class),
             metaDataProvider,
             componentIdentifierFactory,
             dependencyLockingProvider,
@@ -190,7 +183,6 @@ public class DefaultConfigurationFactory {
             rootComponentMetadataBuilder,
             exceptionContextualizer,
             userCodeApplicationContext,
-            projectStateRegistry,
             workerThreadRegistry,
             domainObjectCollectionFactory,
             calculatedValueContainerFactory,
@@ -219,7 +211,6 @@ public class DefaultConfigurationFactory {
             configurationsProvider,
             resolver,
             dependencyResolutionListeners,
-            listenerManager.getBroadcaster(ProjectDependencyObservedListener.class),
             metaDataProvider,
             componentIdentifierFactory,
             dependencyLockingProvider,
@@ -233,7 +224,6 @@ public class DefaultConfigurationFactory {
             rootComponentMetadataBuilder,
             exceptionContextualizer,
             userCodeApplicationContext,
-            projectStateRegistry,
             workerThreadRegistry,
             domainObjectCollectionFactory,
             calculatedValueContainerFactory,
@@ -262,7 +252,6 @@ public class DefaultConfigurationFactory {
             configurationsProvider,
             resolver,
             dependencyResolutionListeners,
-            listenerManager.getBroadcaster(ProjectDependencyObservedListener.class),
             metaDataProvider,
             componentIdentifierFactory,
             dependencyLockingProvider,
@@ -276,7 +265,6 @@ public class DefaultConfigurationFactory {
             rootComponentMetadataBuilder,
             exceptionContextualizer,
             userCodeApplicationContext,
-            projectStateRegistry,
             workerThreadRegistry,
             domainObjectCollectionFactory,
             calculatedValueContainerFactory,

@@ -18,29 +18,57 @@ package org.gradle.api.internal.artifacts.ivyservice.projectmodule;
 
 import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.internal.DomainObjectContext;
+import org.gradle.api.internal.artifacts.ProjectComponentIdentifierInternal;
+import org.gradle.api.internal.artifacts.configurations.ProjectDependencyObservedListener;
+import org.gradle.internal.build.BuildState;
 import org.gradle.internal.component.local.model.LocalComponentGraphResolveState;
+import org.gradle.internal.event.ListenerManager;
+import org.gradle.util.Path;
+
+import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 /**
- * Default implementation of {@link LocalComponentRegistry}. This is a simple build-scoped wrapper
- * around {@link BuildTreeLocalComponentProvider} that contextualizes it to the current build, so that
- * users of this class do not need to keep track of their own build ID.
- *
- * When {@link BuildIdentifier#isCurrentBuild()} is removed, this class can be made build-tree scoped.
+ * Default implementation of {@link LocalComponentRegistry}. This is a simple project-scoped wrapper
+ * around {@link BuildTreeLocalComponentProvider} that contextualizes it to the current project. The
+ * primary purpose of this class is to track dependencies between projects as they are resolved.
  */
 public class DefaultLocalComponentRegistry implements LocalComponentRegistry {
+    private final Path currentProjectPath;
     private final BuildIdentifier thisBuild;
+    private final ProjectDependencyObservedListener projectDependencyObservedListener;
     private final BuildTreeLocalComponentProvider componentProvider;
 
+    @Inject
     public DefaultLocalComponentRegistry(
-        BuildIdentifier thisBuild,
+        DomainObjectContext domainObjectContext,
+        BuildState currentBuild,
+        ListenerManager listenerManager,
         BuildTreeLocalComponentProvider componentProvider
     ) {
-        this.thisBuild = thisBuild;
+        this.currentProjectPath = getProjectIdentityPath(domainObjectContext);
+        this.thisBuild = currentBuild.getBuildIdentifier();
+        this.projectDependencyObservedListener = listenerManager.getBroadcaster(ProjectDependencyObservedListener.class);
         this.componentProvider = componentProvider;
     }
 
     @Override
     public LocalComponentGraphResolveState getComponent(ProjectComponentIdentifier projectIdentifier) {
+        Path targetProjectPath = ((ProjectComponentIdentifierInternal) projectIdentifier).getIdentityPath();
+        if (!targetProjectPath.equals(currentProjectPath)) {
+            projectDependencyObservedListener.projectObserved(currentProjectPath, targetProjectPath);
+        }
+
         return componentProvider.getComponent(projectIdentifier, thisBuild);
+    }
+
+    @Nullable
+    private static Path getProjectIdentityPath(DomainObjectContext domainObjectContext) {
+        if (domainObjectContext.getProject() != null) {
+            return domainObjectContext.getProject().getIdentityPath();
+        }
+
+        return null;
     }
 }

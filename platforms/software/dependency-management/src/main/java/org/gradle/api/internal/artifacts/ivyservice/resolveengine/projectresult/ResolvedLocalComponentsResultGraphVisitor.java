@@ -18,21 +18,37 @@ package org.gradle.api.internal.artifacts.ivyservice.resolveengine.projectresult
 
 import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.internal.artifacts.ProjectComponentIdentifierInternal;
+import org.gradle.api.internal.artifacts.configurations.ConfigurationInternal;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.DependencyGraphNode;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.DependencyGraphVisitor;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.RootGraphNode;
+import org.gradle.api.internal.project.ProjectState;
+import org.gradle.api.internal.project.ProjectStateRegistry;
+import org.gradle.util.Path;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ResolvedLocalComponentsResultGraphVisitor implements DependencyGraphVisitor, ResolvedLocalComponentsResult {
+/**
+ * Used to track which configurations in other projects a given resolution depends on. This data is
+ * used to mark those configurations as observed so that they cannot be mutated later.
+ *
+ * TODO: This logic should be integrated directly into the DefaultLocalConfigurationMetadataBuilder so that
+ * we instantly mark configurations as observed as their metadata is constructed. This is an improvement
+ * over this visitor, where we only mark a configuration observed if its metadata is present in the final graph.
+ * There are likely scenarios that this visitor does not cover, where a configuration's metadata is observed but
+ * its component is not present in the final graph.
+ */
+public class ResolvedLocalComponentsResultGraphVisitor implements DependencyGraphVisitor {
     private final List<ResolvedProjectConfiguration> resolvedProjectConfigurations = new ArrayList<>();
     private final BuildIdentifier thisBuild;
+    private final ProjectStateRegistry projectStateRegistry;
     private ComponentIdentifier rootId;
 
-    public ResolvedLocalComponentsResultGraphVisitor(BuildIdentifier thisBuild) {
+    public ResolvedLocalComponentsResultGraphVisitor(BuildIdentifier thisBuild, ProjectStateRegistry projectStateRegistry) {
         this.thisBuild = thisBuild;
+        this.projectStateRegistry = projectStateRegistry;
     }
 
     @Override
@@ -43,20 +59,37 @@ public class ResolvedLocalComponentsResultGraphVisitor implements DependencyGrap
     @Override
     public void visitNode(DependencyGraphNode node) {
         ComponentIdentifier componentId = node.getOwner().getComponentId();
-        if (!rootId.equals(componentId) && componentId instanceof ProjectComponentIdentifier) {
-            ProjectComponentIdentifier projectComponentId = (ProjectComponentIdentifier) componentId;
+        if (!rootId.equals(componentId) && componentId instanceof ProjectComponentIdentifierInternal) {
+            ProjectComponentIdentifierInternal projectComponentId = (ProjectComponentIdentifierInternal) componentId;
             if (projectComponentId.getBuild().equals(thisBuild)) {
-                resolvedProjectConfigurations.add(new DefaultResolvedProjectConfiguration(projectComponentId, node.getResolvedConfigurationId().getConfiguration()));
+                resolvedProjectConfigurations.add(new ResolvedProjectConfiguration(projectComponentId.getIdentityPath(), node.getResolvedConfigurationId().getConfiguration()));
             }
         }
     }
 
-    @Override
-    public Iterable<ResolvedProjectConfiguration> getResolvedProjectConfigurations() {
-        return resolvedProjectConfigurations;
+    /**
+     * Mark all visited project variant nodes as observed.
+     */
+    public void complete(ConfigurationInternal.InternalState requestedState) {
+        for (ResolvedLocalComponentsResultGraphVisitor.ResolvedProjectConfiguration projectResult : resolvedProjectConfigurations) {
+            ProjectState targetState = projectStateRegistry.stateFor(projectResult.projectIdentity);
+            targetState.applyToMutableState(project -> {
+                ConfigurationInternal targetConfig = (ConfigurationInternal) project.getConfigurations().findByName(projectResult.targetConfiguration);
+                if (targetConfig != null) {
+                    // Can be null when dependency metadata for target project has been loaded from cache
+                    targetConfig.markAsObserved(requestedState);
+                }
+            });
+        }
     }
 
-    public ResolvedLocalComponentsResult complete() {
-        return this;
+    private static class ResolvedProjectConfiguration {
+        private final Path projectIdentity;
+        private final String targetConfiguration;
+
+        public ResolvedProjectConfiguration(Path projectIdentity, String targetConfiguration) {
+            this.projectIdentity = projectIdentity;
+            this.targetConfiguration = targetConfiguration;
+        }
     }
 }

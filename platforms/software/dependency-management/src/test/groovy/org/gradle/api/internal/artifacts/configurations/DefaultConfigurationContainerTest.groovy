@@ -36,7 +36,6 @@ import org.gradle.api.internal.artifacts.ivyservice.moduleconverter.DefaultRootC
 import org.gradle.api.internal.attributes.ImmutableAttributesFactory
 import org.gradle.api.internal.file.TestFiles
 import org.gradle.api.internal.initialization.RootScriptDomainObjectContext
-import org.gradle.api.internal.project.ProjectStateRegistry
 import org.gradle.internal.artifacts.configurations.NoContextRoleBasedConfigurationCreationRequest
 import org.gradle.internal.code.UserCodeApplicationContext
 import org.gradle.internal.event.ListenerManager
@@ -58,7 +57,6 @@ class DefaultConfigurationContainerTest extends Specification {
     private ComponentIdentifierFactory componentIdentifierFactory = Mock(ComponentIdentifierFactory)
     private BuildOperationExecutor buildOperationExecutor = Mock(BuildOperationExecutor)
     private DependencyLockingProvider lockingProvider = Mock(DependencyLockingProvider)
-    private ProjectStateRegistry projectStateRegistry = Mock(ProjectStateRegistry)
     private CollectionCallbackActionDecorator callbackActionDecorator = Mock(CollectionCallbackActionDecorator) {
         decorate(_ as Action) >> { it[0] }
     }
@@ -92,7 +90,6 @@ class DefaultConfigurationContainerTest extends Specification {
         immutableAttributesFactory,
         Stub(ResolveExceptionContextualizer),
         userCodeApplicationContext,
-        projectStateRegistry,
         Mock(WorkerThreadRegistry),
         TestUtil.domainObjectCollectionFactory(),
         calculatedValueContainerFactory,

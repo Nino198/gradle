@@ -29,10 +29,9 @@ import org.gradle.api.internal.artifacts.ivyservice.moduleconverter.RootComponen
 import org.gradle.api.internal.attributes.ImmutableAttributesFactory;
 import org.gradle.api.internal.collections.DomainObjectCollectionFactory;
 import org.gradle.api.internal.file.FileCollectionFactory;
-import org.gradle.api.internal.project.ProjectStateRegistry;
 import org.gradle.api.internal.tasks.TaskDependencyFactory;
-import org.gradle.internal.code.UserCodeApplicationContext;
 import org.gradle.internal.Factory;
+import org.gradle.internal.code.UserCodeApplicationContext;
 import org.gradle.internal.event.ListenerBroadcast;
 import org.gradle.internal.model.CalculatedValueContainerFactory;
 import org.gradle.internal.operations.BuildOperationExecutor;
@@ -51,7 +50,6 @@ public class DefaultConsumableConfiguration extends DefaultConfiguration impleme
         ConfigurationsProvider configurationsProvider,
         ConfigurationResolver resolver,
         ListenerBroadcast<DependencyResolutionListener> dependencyResolutionListeners,
-        ProjectDependencyObservedListener dependencyObservedBroadcast,
         DependencyMetaDataProvider metaDataProvider,
         ComponentIdentifierFactory componentIdentifierFactory,
         DependencyLockingProvider dependencyLockingProvider,
@@ -65,7 +63,6 @@ public class DefaultConsumableConfiguration extends DefaultConfiguration impleme
         RootComponentMetadataBuilder rootComponentMetadataBuilder,
         ResolveExceptionContextualizer exceptionContextualizer,
         UserCodeApplicationContext userCodeApplicationContext,
-        ProjectStateRegistry projectStateRegistry,
         WorkerThreadRegistry workerThreadRegistry,
         DomainObjectCollectionFactory domainObjectCollectionFactory,
         CalculatedValueContainerFactory calculatedValueContainerFactory,
@@ -78,7 +75,6 @@ public class DefaultConsumableConfiguration extends DefaultConfiguration impleme
             configurationsProvider,
             resolver,
             dependencyResolutionListeners,
-            dependencyObservedBroadcast,
             metaDataProvider,
             componentIdentifierFactory,
             dependencyLockingProvider,
@@ -92,7 +88,6 @@ public class DefaultConsumableConfiguration extends DefaultConfiguration impleme
             rootComponentMetadataBuilder,
             exceptionContextualizer,
             userCodeApplicationContext,
-            projectStateRegistry,
             workerThreadRegistry,
             domainObjectCollectionFactory,
             calculatedValueContainerFactory,

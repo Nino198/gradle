@@ -29,7 +29,6 @@ import org.gradle.api.internal.artifacts.ivyservice.moduleconverter.DefaultRootC
 import org.gradle.api.internal.file.FileCollectionFactory
 import org.gradle.api.internal.file.TestFiles
 import org.gradle.api.internal.initialization.RootScriptDomainObjectContext
-import org.gradle.api.internal.project.ProjectStateRegistry
 import org.gradle.api.specs.Spec
 import org.gradle.internal.code.UserCodeApplicationContext
 import org.gradle.internal.event.ListenerManager
@@ -53,7 +52,6 @@ class DefaultConfigurationContainerSpec extends Specification {
     private ComponentIdentifierFactory componentIdentifierFactory = Mock()
     private BuildOperationExecutor buildOperationExecutor = Mock()
     private DependencyLockingProvider dependencyLockingProvider = Mock()
-    private ProjectStateRegistry projectStateRegistry = Mock()
     private UserCodeApplicationContext userCodeApplicationContext = Mock()
     private CalculatedValueContainerFactory calculatedValueContainerFactory = Mock()
 
@@ -82,7 +80,6 @@ class DefaultConfigurationContainerSpec extends Specification {
         immutableAttributesFactory,
         Stub(ResolveExceptionContextualizer),
         userCodeApplicationContext,
-        projectStateRegistry,
         Mock(WorkerThreadRegistry),
         TestUtil.domainObjectCollectionFactory(),
         calculatedValueContainerFactory,
