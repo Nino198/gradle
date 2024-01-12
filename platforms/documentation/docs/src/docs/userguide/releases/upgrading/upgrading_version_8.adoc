@@ -40,10 +40,16 @@ The previous step will help you identify potential problems by issuing deprecati
 
 === Potential breaking changes
 
+==== Upgrade to Apache Commons Compress 1.25.0
+
+Apache Commons Compress has been updated from 1.21 to https://commons.apache.org/proper/commons-compress/changes-report.html#a1.25.0[1.25.0].
+This change may affect the checksums of the produced jars, zips, and other archive types because the metadata of the produced artifacts may differ.
+
 === Deprecations
 
 [[deprecated_invalid_url_decoding]]
 ==== Deprecated invalid URL decoding behavior
+
 Prior to Gradle 8.3, Gradle would decode a `CharSequence` given to `link:{groovyDslPath}/org.gradle.api.Project.html#org.gradle.api.Project:uri(java.lang.Object)[Project.uri(Object)]` using an algorithm that accepted invalid URLs and improperly decoded others.
 Gradle now uses the `URI` class to parse and decode URLs, but with a fallback to the legacy behavior in the event of an error.
 
