@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import com.alibaba.fastjson.serializer.SerializerFeature
+import common.Arch
 import common.Os
 import common.VersionedSettingsBranch
 import configurations.ParallelizationMethod
@@ -111,6 +112,17 @@ class FunctionalTestBucketGenerator(private val model: CIBuildModel, testTimeDat
         return result
     }
 
+    private fun onlyNativeSubprojectsForIntelMacs(
+        testCoverage: TestCoverage,
+        subprojectTestClassTime: SubprojectTestClassTime
+    ): Boolean {
+        return if (testCoverage.os == Os.MACOS && testCoverage.arch == Arch.AMD64) {
+            subprojectTestClassTime.subProject.name.contains("native")
+        } else {
+            true
+        }
+    }
+
     private
     fun splitBucketsByTestClassesForBuildProject(testCoverage: TestCoverage, buildProjectClassTimes: BuildProjectToSubprojectTestClassTimes): List<SmallSubprojectBucket> {
         val validSubprojects = model.subprojects.getSubprojectsForFunctionalTest(testCoverage)
@@ -131,6 +143,7 @@ class FunctionalTestBucketGenerator(private val model: CIBuildModel, testTimeDat
             .filter { model.subprojects.getSubprojectByName(it.key) != null }
             .map { SubprojectTestClassTime(model.subprojects.getSubprojectByName(it.key)!!, it.value.filter { it.testClassAndSourceSet.sourceSet != "test" }) }
             .sortedBy { -it.totalTime }
+            .filter { onlyNativeSubprojectsForIntelMacs(testCoverage, it) }
 
         return parallelize(subProjectTestClassTimes, testCoverage) { numberOfBatches ->
             if (testCoverage.os == Os.LINUX)
