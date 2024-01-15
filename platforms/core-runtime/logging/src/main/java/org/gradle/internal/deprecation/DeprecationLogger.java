@@ -157,7 +157,6 @@ public class DeprecationLogger {
      * Output: ${action} has been deprecated.
      */
     @CheckReturnValue
-    @SuppressWarnings("rawtypes")
     public static DeprecationMessageBuilder.DeprecateAction deprecateAction(final String action) {
         return new DeprecationMessageBuilder.DeprecateAction(action);
     }
@@ -362,7 +361,6 @@ public class DeprecationLogger {
             public void execute(InternalProblemSpec builder) {
                 InternalProblemSpec internalProblemSpec = builder
                     .label(usage.getSummary())
-                    // FIXME: Not sure
                     .documentedAt(usage.getDocumentationUrl())
                     .stackLocation()
                     .category(DEPRECATION, screamingSnakeToKebabCase(usage.getType().name()))
